@@ -72,7 +72,7 @@ export default defineComponent({
           activePlayers++;
         }
       });
-      if (activePlayers === 4) this.startOK = true;
+      if (activePlayers === 4 || activePlayers === 5) this.startOK = true;
       else this.startOK = false;
     },
     droppedPlayer(e: Event, playerId: number) {
