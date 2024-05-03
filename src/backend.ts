@@ -1,11 +1,11 @@
-export interface player {
+export type player = {
   id: number;
   name: string;
   surname: string;
   active: boolean;
   sort: number;
 }
-export interface playerState {
+export type playerState = {
   playerId: number;
   name: string;
   score: number;
@@ -13,13 +13,13 @@ export interface playerState {
   lastScore: string;
   sort: number;
 }
-export interface gameState {
+export type gameState = {
   playerId: number;
   points: number;
   party: kontraRe;
 }
 
-export interface statistic {
+export type statistic = {
   gamesplayed: number;
   gamesre: number;
   gameskontra: number;
@@ -29,11 +29,11 @@ export interface statistic {
   totalpoints: number;
   averagepoints: number;
 }
-export interface game {
+export type game = {
   gameId: number;
   players: gameState[];
 }
-export interface saveGame {
+export type saveGame = {
   playerStates: playerState[];
   kontraAnsage: number;
   reAnsage: number;
@@ -44,6 +44,7 @@ export interface saveGame {
 export enum kontraRe {
   Re,
   Kontra,
+  Geber
 }
 const HOST = import.meta.env.VITE_BACKEND as string;
 export class backend {
@@ -81,7 +82,7 @@ export class backend {
     const data = await res.json();
     return data;
   }
-  async fetchActivePlayers(): Promise<player[]> {
+  async fetchActivePlayers(): Promise<Array<player>> {
     const res = await fetch(`${HOST}players.php/activeOnly`);
     const data = await res.json();
     return data;

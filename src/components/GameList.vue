@@ -71,7 +71,7 @@ export default defineComponent({
       this.players = this.players
         .filter((player) => player.active == true)
         .sort(
-          (playerA, playerB) => this.sums[playerA.id] - this.sums[playerB.id],
+          (playerA, playerB) => playerA.sort-playerB.sort                                 //this.sums[playerA.id] - this.sums[playerB.id],
         );
     },
   },

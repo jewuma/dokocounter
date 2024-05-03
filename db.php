@@ -142,31 +142,66 @@ class dokodb
     }
     return $fields;
   }
-
   function getActualResults()
-  {
+{
     $activeListId = $this->db->query("SELECT activeListId FROM counter")->fetch_array()[0];
     $games = [];
+    $players = $this->getAllPlayers(true);
+
     if ($activeListId != NULL) {
-      $res = $this->db->query("SELECT playerId,gameId,points,kontrare FROM games
-                              WHERE listId='$activeListId' ORDER BY gameId");
-      if ($res->num_rows == 0) {
-        $games[0]['players'] = [];
-        $players = $this->getAllPlayers(true);
-        foreach ($players as $no => $player) {
-          array_push($games[0]['players'], ['playerId' => $player['id'], 'points' => 0, 'party' => 1]);
+        $res = $this->db->query("SELECT playerId,gameId,points,kontrare FROM games WHERE listId='$activeListId' ORDER BY gameId");
+
+        if ($res->num_rows == 0) {
+            // If no games found, initialize games array with players having 0 points
+            $games[0]['players'] = [];
+            foreach ($players as $no => $player) {
+                array_push($games[0]['players'], ['playerId' => $player['id'], 'points' => 0, 'party' => 1]);
+            }
+        } else {
+            // Games found, process game results
+            $lastGameId = 0;
+            while ($game = $res->fetch_assoc()) {
+                $k = $game["kontrare"] == 'Re' ? 0 : 1;
+
+                // Ensure games array initialized for the current game
+                if (!isset($games[$game["gameId"]]))
+                    $games[$game["gameId"]]['players'] = [];
+
+                // Check if players are covered in the current game
+                if ($lastGameId != $game['gameId']) {
+                    if ($lastGameId != 0) {
+                        // If not covered, add players with 0 points and party 2
+                        foreach ($players as $no => $player) {
+                            if (!isset($playerCovered[$player['id']])) {
+                                array_push($games[$lastGameId]['players'], ['playerId' => $player['id'], 'points' => 0, 'party' => 2]);
+                            }
+                        }
+                    }
+                    $lastGameId = $game['gameId'];
+                    $playerCovered = []; // Reset player coverage for the new game
+                }
+
+                // Add player points to the current game
+                array_push($games[$game["gameId"]]['players'], ['playerId' => $game["playerId"], 'points' => $game["points"], 'party' => $k]);
+
+                // Mark player as covered in the current game
+                $playerCovered[$game['playerId']] = "";
+            }
+            if ($lastGameId>0) {
+            // Check if players are covered in the last game
+            foreach ($players as $no => $player) {
+                if (!isset($playerCovered[$player['id']])) {
+                    array_push($games[$lastGameId]['players'], ['playerId' => $player['id'], 'points' => 0, 'party' => 2]);
+                }
+              }
+            }
         }
-      } else {
-        while ($game = $res->fetch_assoc()) {
-          $k = $game["kontrare"] == 'Re' ? 0 : 1;
-          if (!isset($games[$game["gameId"]]))
-            $games[$game["gameId"]]['players'] = [];
-          array_push($games[$game["gameId"]]['players'], ['playerId' => $game["playerId"], 'points' => $game["points"], 'party' => $k]);
-        }
-      }
     }
+
     return $games;
-  }
+}
+
+
   function addGame($results, $changeLastGame)
   {
     $gameId = $this->getLastGameId();
@@ -235,7 +270,7 @@ class dokodb
     //extrapoints -5 bis -1 =Re-Extrapunkte, 1 bis 5 = Kontra-Extrapunkte
     //kontraAnsage 0=keine Ansage 1=Kontra, keine 9 bis 5 = schwarz
     //reAnsage 0=keine Ansage -1=Re,-2=keine 9, -5=schwarz
-    //player['party']==0 : Re, player['party']==1 : Kontra
+    //player['party']==0 : Re, player['party']==1 : Kontra, player['party']==2 Geber
     $result = $gameData['result'];
     $extrapoints = $gameData['extrapoints'];
     $kontraAnsage = $gameData['kontraAnsage'];
@@ -285,6 +320,7 @@ class dokodb
     $results = [];
 
     foreach ($gameData['playerStates'] as $player) {
+      if ($player['party']==2) continue; //Geber
       $party = $player['party'] == 0 ? "Re" : "Kontra";
       $playerpoints = $points;
       $ansage = $party == "Re" ? $reAnsage : $kontraAnsage;

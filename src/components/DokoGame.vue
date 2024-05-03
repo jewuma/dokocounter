@@ -2,8 +2,8 @@
   <div>
     <h3 style="padding-top: 0">Spiel Nr. {{ gameNumber }}</h3>
     <DokoButton :key="key" v-for="(player, key) in playerStates" :text="player.name" :textr="player.score.toString()"
-      :textl="player.lastScore.toString()" :color="player.party === kontraRe.Kontra ? 'green' : 'red'"
-      @click="toggleParty(key)" />
+      :textl="player.lastScore.toString()" :color="getPlayerColor(player.party)" @click="toggleParty(key)"
+      @double-click="setGeber(key)" />
     <h3>Ansagen</h3>
     <div class="pointbuttons">
       <PointButton :buttonData="button" :buttonId="index" :key="index" v-for="(button, index) in PronounceButtons"
@@ -120,6 +120,7 @@ export default defineComponent({
       let gibt = 0;
       this.gameNumber = 1;
       this.playerStates = [];
+      let playerCount = this.players.length
       Object.values(this.games).forEach((singleGame) => {
         let reCount = 0;
         Object.values(singleGame.players).forEach((singlePlayer) => {
@@ -151,7 +152,7 @@ export default defineComponent({
         });
         if (reCount === 2) {
           gibt++;
-          if (gibt === 4) {
+          if (gibt === playerCount) {
             gibt = 0;
           }
         }
@@ -160,28 +161,31 @@ export default defineComponent({
       this.playerStates.sort((a, b) => {
         return a.sort - b.sort;
       });
-      for (let i = 0; i < this.playerStates.length; i++) {
+      for (let i = 0; i < playerCount; i++) {
         if (i == gibt) {
           this.playerStates[i].name += " (G)";
+          if (playerCount === 5) this.playerStates[i].party = kontraRe.Geber
         }
       }
       this.saveOK = false;
     },
     toggleParty(playerId: number) {
-      if (this.playerStates[playerId].party === kontraRe.Kontra) {
-        this.playerStates[playerId].party = kontraRe.Re;
-      } else {
-        this.playerStates[playerId].party = kontraRe.Kontra;
-      }
-      let reCount = 0;
-      Object.values(this.playerStates).forEach((player) => {
-        if (player.party === kontraRe.Re) {
-          reCount++;
+      if (this.playerStates[playerId].party !== kontraRe.Geber) {
+        if (this.playerStates[playerId].party === kontraRe.Kontra) {
+          this.playerStates[playerId].party = kontraRe.Re;
+        } else {
+          this.playerStates[playerId].party = kontraRe.Kontra;
         }
-      });
-      this.saveOK = false;
-      if (reCount === 1 || reCount === 2) {
-        this.saveOK = true;
+        let reCount = 0;
+        Object.values(this.playerStates).forEach((player) => {
+          if (player.party === kontraRe.Re) {
+            reCount++;
+          }
+        });
+        this.saveOK = false;
+        if (reCount === 1 || reCount === 2) {
+          this.saveOK = true;
+        }
       }
     },
     pronounceClick(buttonId: number) {
@@ -221,6 +225,15 @@ export default defineComponent({
         });
       }
     },
+    getPlayerColor(party: kontraRe) {
+      if (party === kontraRe.Kontra) {
+        return 'green'
+      } else if (party === kontraRe.Re) {
+        return 'red'
+      } else {
+        return 'grey'
+      }
+    },
     async saveGame() {
       if (this.saveOK) {
         //result=-4:Re schwarz,-3=Re3 -2=Re6 -1=Re9 0=re Gewonnen, 1=Kontra gewonnen, 5=Kontra schwarz gewonnen
@@ -255,6 +268,19 @@ export default defineComponent({
       this.saveGame();
       this.changeLastGame = false;
     },
+    setGeber(playerId: number) {
+      if (this.players.length===5) {
+
+        this.playerStates.forEach((playerState,index)=>{
+          if (playerState.party===kontraRe.Geber && playerState.playerId!==playerId) {
+            this.playerStates[index].party=kontraRe.Kontra;
+            this.playerStates[index].name=this.playerStates[index].name.slice(0,-4);
+          }
+        });
+        this.playerStates[playerId].party=kontraRe.Geber;
+        this.playerStates[playerId].name=this.playerStates[playerId].name+" (G)";
+      }
+    }
   },
 });
 </script>
