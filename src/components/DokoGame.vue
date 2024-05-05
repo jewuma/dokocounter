@@ -120,7 +120,7 @@ export default defineComponent({
       let gibt = 0;
       this.gameNumber = 1;
       this.playerStates = [];
-      let playerCount = this.players.length
+      const playerCount = this.players.length
       Object.values(this.games).forEach((singleGame) => {
         let reCount = 0;
         Object.values(singleGame.players).forEach((singlePlayer) => {

@@ -14,7 +14,6 @@ import DokoPlayers from "./components/DokoPlayers.vue";
 import DokoMenu from "./components/DokoMenu.vue";
 import DokoStatistics from "./components/DokoStatistics.vue";
 import DokoGame from "./components/DokoGame.vue";
-import DokoHeader from "./components/DokoHeader.vue";
 import GameList from "./components/GameList.vue";
 import { backend } from "./backend";
 import type { player } from "./backend";
@@ -27,7 +26,6 @@ export default defineComponent({
     DokoStatistics,
     GameList,
     DokoGame,
-    DokoHeader
   },
   players: [],
   host: "",

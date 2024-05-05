@@ -29,7 +29,7 @@ export default defineComponent({
       this.mTimer=setTimeout(()=>{
         this.$emit("double-click");
       },500);
-      ;
+      
     },
     stopHold() {
       if (this.mTimer!==0) {
